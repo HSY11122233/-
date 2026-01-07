@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}用户注册{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg mt-5">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">新用户注册</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Flash 消息显示 -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" novalidate>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">真实姓名 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   placeholder="请输入您的姓名" required autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="用于登录的用户名" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">电子邮箱 <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="用于找回密码" required>
+                        </div>
+
+                        <!-- 新增：邀请码输入框（可选） -->
+                        <div class="mb-3">
+                            <label for="referral_code" class="form-label">邀请码 <span class="text-muted">(可选)</span></label>
+                            <input type="text" class="form-control" id="referral_code" name="referral_code" 
+                                   placeholder="有好友邀请码可获额外奖励哦～" 
+                                   value="{{ request.args.get('ref', '')|upper }}">
+                            <div class="form-text">
+                                <small class="text-success">
+                                    <strong>使用邀请码注册：您将获得 ¥5 奖励，邀请人获得 ¥10！</strong>
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">密码 <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="至少6位" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="confirm_password" class="form-label">确认密码 <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                   placeholder="再次输入密码" required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">立即注册</button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p>已有账号？ <a href="{{ url_for('login') }}" class="text-primary">立即登录</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

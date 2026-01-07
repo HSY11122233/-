@@ -1,0 +1,74 @@
+<!-- templates/edit_book.html -->
+{% extends "base.html" %}
+{% block title %}编辑书籍{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">✏️ 编辑书籍信息</h2>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">书名 <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control" value="{{ book.title }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">作者 <span class="text-danger">*</span></label>
+                    <input type="text" name="author" class="form-control" value="{{ book.author }}" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">ISBN</label>
+                    <input type="text" name="isbn" class="form-control" value="{{ book.isbn }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">出版年份</label>
+                    <input type="number" name="publish_year" class="form-control" 
+                           value="{{ book.publish_year }}" min="1000" max="2100" placeholder="如 2023">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">出版社</label>
+                    <select name="publisher_id" class="form-select">
+                        <option value="">-- 无或未知 --</option>
+                        {% for p in publishers %}
+                        <option value="{{ p.publisher_id }}"
+                            {% if p.publisher_id == book.publisher_id %}selected{% endif %}>
+                            {{ p.publisher_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">类别</label>
+                    <select name="category_id" class="form-select">
+                        <option value="">-- 未分类 --</option>
+                        {% for c in categories %}
+                        <option value="{{ c.category_id }}"
+                            {% if c.category_id == book.category_id %}selected{% endif %}>
+                            {{ c.category_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <hr>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">💾 保存修改</button>
+                <a href="{{ url_for('books') }}" class="btn btn-secondary btn-lg">取消返回</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 显示当前书籍ID（仅供参考） -->
+<div class="mt-4 text-muted small">
+    书籍ID: {{ book.book_id }}（不可修改）
+</div>
+{% endblock %}

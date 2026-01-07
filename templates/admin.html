@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}管理控制中心 - 图书馆管理系统{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <!-- 标题 + 快捷按钮 -->
+    <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">
+                <i class="bi bi-shield-lock-fill me-2"></i>管理控制中心
+            </h2>
+            <p class="text-muted mb-0">高效管理 · 实时数据 · 一键操作</p>
+        </div>
+        <div class="d-flex gap-3 flex-wrap">
+            <a href="{{ url_for('add_book') }}" class="btn btn-success shadow-sm">
+                <i class="bi bi-bookmark-plus me-1"></i> 新增书籍
+            </a>
+            <button class="btn btn-warning shadow-sm" data-bs-toggle="modal" data-bs-target="#batchBalanceModal">
+                <i class="bi bi-cash-coin me-1"></i> 批量改余额
+            </button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> 返回个人中心
+            </a>
+        </div>
+    </div>
+
+    <!-- 统计卡片（简洁有力） -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 text-white bg-primary text-center py-5 rounded-4">
+                <i class="bi bi-people-fill display-4 mb-3"></i>
+                <h3 class="mb-1">{{ total_users | default(0) }}</h3>
+                <p class="mb-0">总用户数</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 text-white bg-danger text-center py-5 rounded-4">
+                <i class="bi bi-book-fill display-4 mb-3"></i>
+                <h3 class="mb-1">{{ total_books | default(0) }}</h3>
+                <p class="mb-0">馆藏书籍</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 text-white bg-info text-center py-5 rounded-4">
+                <i class="bi bi-journal-check display-4 mb-3"></i>
+                <h3 class="mb-1">{{ active_borrows | default(0) }}</h3>
+                <p class="mb-0">当前借阅</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 text-white bg-success text-center py-5 rounded-4">
+                <i class="bi bi-gift-fill display-4 mb-3"></i>
+                <h3 class="mb-1">¥{{ "%.2f"|format(total_rewards | default(0)) }}</h3>
+                <p class="mb-0">平台总奖励</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户管理表格（核心操作区） -->
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>用户管理（共 {{ all_users|length }} 人）</h5>
+            <input type="search" id="userSearch" class="form-control w-75 w-md-50 w-lg-25" placeholder="搜索姓名 / 用户名 / 邮箱">
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle" id="userTable">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th class="text-center"><input type="checkbox" id="selectAll"></th>
+                            <th>ID</th>
+                            <th>姓名</th>
+                            <th>用户名</th>
+                            <th>邮箱</th>
+                            <th class="text-end">余额</th>
+                            <th class="text-center">邀请</th>
+                            <th class="text-end">奖励</th>
+                            <th>角色</th>
+                            <th class="text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in all_users %}
+                        <tr>
+                            <td class="text-center"><input type="checkbox" class="user-checkbox" value="{{ u.reader_id }}"></td>
+                            <td>{{ u.reader_id }}</td>
+                            <td><strong>{{ u.name }}</strong></td>
+                            <td>{{ u.username }}</td>
+                            <td>{{ u.email or '—' }}</td>
+                            <td class="text-end text-success fw-bold">¥{{ "%.2f"|format(u.balance) }}</td>
+                            <td class="text-center">{{ u.invited_count | default(0) }}</td>
+                            <td class="text-end text-warning fw-bold">¥{{ "%.2f"|format(u.referral_reward | default(0)) }}</td>
+                            <td>
+                                <span class="badge {% if u.role == 'admin' %}bg-danger{% elif u.role == 'staff' %}bg-info{% else %}bg-secondary{% endif %}">
+                                    {{ u.role }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary" onclick="editUser({{ u.reader_id }})">
+                                        <i class="bi bi-pencil me-1"></i>编辑
+                                    </button>
+                                    <button class="btn btn-outline-warning" onclick="adjustBalance({{ u.reader_id }}, '{{ u.name | e }}')">
+                                        <i class="bi bi-wallet2 me-1"></i>改余额
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="resetPassword({{ u.reader_id }})">
+                                        <i class="bi bi-key me-1"></i>重密码
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 排行榜 + 热门书籍 -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-gradient text-white text-center py-3" style="background: linear-gradient(90deg, #667eea, #764ba2);">
+                    <h5 class="mb-0"><i class="bi bi-trophy-fill me-2"></i>邀请排行榜 TOP10</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for rank in ranking %}
+                    <div class="list-group-item d-flex align-items-center py-3">
+                        <div class="me-3 text-center" style="width: 60px;">
+                            {% if loop.index == 1 %}<span class="fs-2">🥇</span>
+                            {% elif loop.index == 2 %}<span class="fs-2">🥈</span>
+                            {% elif loop.index == 3 %}<span class="fs-2">🥉</span>
+                            {% else %}<span class="fs-4 fw-bold text-muted">{{ loop.index }}</span>{% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <strong>{{ rank.name }}</strong><br>
+                            <small class="text-muted">@{{ rank.username }}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-primary">{{ rank.invited_count }} 人</div>
+                            <div class="text-success">¥{{ "%.2f"|format(rank.referral_reward) }}</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item text-center text-muted py-5">暂无邀请数据</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-danger text-white text-center py-3">
+                    <h5 class="mb-0"><i class="bi bi-fire me-2"></i>最热门书籍 TOP5</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% for book in hot_books %}
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="text-danger fw-bold me-3 fs-5">{{ loop.index }}.</span>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">{{ book.title }}</div>
+                            <small class="text-muted">{{ book.author }}</small>
+                            <div class="progress mt-2" style="height: 8px;">
+                                <div class="progress-bar bg-danger" style="width: {{ (book.borrow_count / (hot_books[0].borrow_count if hot_books else 1)) * 100 }}%;"></div>
+                            </div>
+                        </div>
+                        <span class="ms-3 text-danger fw-bold">{{ book.borrow_count }} 次</span>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">暂无借阅记录</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- 批量操作模态框 -->
+<div class="modal fade" id="batchBalanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">批量调整余额</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">已选中 <strong id="selectedCount">0</strong> 名用户</p>
+                <div class="mb-3">
+                    <label class="form-label">操作类型</label>
+                    <select class="form-select" id="batchType">
+                        <option value="add">增加余额</option>
+                        <option value="subtract">扣除余额</option>
+                    </select>
+                </div>
+                <input type="number" class="form-control" id="batchAmount" placeholder="输入金额（如 10.00）" step="0.01">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary">执行操作（后续实现）</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 防抖搜索（解决输入卡顿）
+function debounce(fn, delay = 300) {
+    let timer;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+
+const searchInput = document.getElementById('userSearch');
+searchInput.addEventListener('input', debounce(function (e) {
+    const term = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('#userTable tbody tr').forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+    });
+}));
+
+// 全选与计数
+document.getElementById('selectAll').addEventListener('change', function () {
+    document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = this.checked);
+    updateCount();
+});
+
+document.querySelectorAll('.user-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateCount);
+});
+
+function updateCount() {
+    const count = document.querySelectorAll('.user-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = count;
+}
+
+// 临时操作提示
+function editUser(id) { alert(`编辑用户 ID: ${id}（功能待开发）`); }
+function adjustBalance(id, name) {
+    const amount = prompt(`为用户【${name}】调整余额（正数加，负数减）：`);
+    if (amount !== null) alert(`已提交 ¥${amount} 调整（功能待开发）`);
+}
+function resetPassword(id) {
+    if (confirm(`确定将用户 ID ${id} 的密码重置为 123456？`)) {
+        alert('密码已重置（功能待开发）');
+    }
+}
+</script>
+{% endblock %}

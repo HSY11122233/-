@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}逾期记录{% endblock %}
+{% block content %}
+<h2>⚠️ 逾期未还书籍</h2>
+{% if overdue %}
+<table class="table table-striped table-hover">
+    <thead class="table-danger">
+        <tr>
+            <th>借阅ID</th>
+            <th>读者姓名</th>
+            <th>书名</th>
+            <th>应还日期</th>
+            <th>逾期天数</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in overdue %}
+        <tr>
+            <td>{{ row.record_id }}</td>
+            <td>{{ row.name }}</td>
+            <td>{{ row.title }}</td>
+            <td>{{ row.due_date }}</td>
+            <td><strong>{{ row.overdue_days }} 天</strong></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="alert alert-success">
+    <strong>🎉 很好！</strong> 当前没有逾期未还的书籍！
+</div>
+{% endif %}
+{% endblock %}
