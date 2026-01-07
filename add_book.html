@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}新增书籍{% endblock %}
+{% block content %}
+<h2>➕ 新增书籍（管理员功能）</h2>
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">书名 <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">作者 <span class="text-danger">*</span></label>
+                    <input type="text" name="author" class="form-control" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">ISBN</label>
+                    <input type="text" name="isbn" class="form-control" placeholder="如 978-7-02-009042-6">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">出版年份</label>
+                    <input type="number" name="publish_year" class="form-control" min="1900" max="2030">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">出版社</label>
+                    <select name="publisher_id" class="form-select">
+                        <option value="">-- 选择出版社（可选） --</option>
+                        {% for p in publishers %}
+                        <option value="{{ p.publisher_id }}">{{ p.publisher_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">类别</label>
+                    <select name="category_id" class="form-select">
+                        <option value="">-- 选择类别（可选） --</option>
+                        {% for c in categories %}
+                        <option value="{{ c.category_id }}">{{ c.category_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">添加副本数量 <span class="text-danger">*</span></label>
+                <input type="number" name="copies" class="form-control" value="1" min="1" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">添加书籍</button>
+            <a href="{{ url_for('books') }}" class="btn btn-secondary btn-lg ms-3">返回书籍列表</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

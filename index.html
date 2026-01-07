@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}首页{% endblock %}
+
+{% block content %}
+
+<!-- 添加 pt-5 是为了给 fixed-top 导航栏留出空间，避免遮挡内容 -->
+<div class="container pt-5">
+
+    <!-- 使用 Bootstrap 5 推荐的现代卡片式欢迎区域 -->
+    <div class="text-center py-5 my-5">
+        <h1 class="display-4 fw-bold text-primary mb-4">
+            <i class="fas fa-book-open me-3"></i>欢迎使用智慧图书馆系统
+        </h1>
+        <p class="lead text-muted fs-5 mb-5">
+            基于 Flask + MySQL 开发的完整校园图书馆管理系统<br>
+            支持借书、座位预约、社区论坛、在线充值等多项功能
+        </p>
+
+        <div class="row justify-content-center g-4">
+            <div class="col-md-8">
+                <div class="card border-0 shadow-lg h-100">
+                    <div class="card-body p-5">
+                        <h3 class="card-title mb-4">快速开始</h3>
+                        <p class="card-text text-muted">
+                            点击上方导航栏即可使用各项功能：
+                        </p>
+                        <div class="row text-start mt-4">
+                            <div class="col-sm-6 mb-3">
+                                <a href="{{ url_for('books') }}" class="text-decoration-none">
+                                    <i class="fas fa-search text-primary me-2"></i><strong>书籍目录</strong> - 搜索并借阅图书
+                                </a>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <a href="{{ url_for('seats') }}" class="text-decoration-none">
+                                    <i class="fas fa-chair text-success me-2"></i><strong>座位预订</strong> - 预约自习座位
+                                </a>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <a href="{{ url_for('forum') }}" class="text-decoration-none">
+                                    <i class="fas fa-comments text-info me-2"></i><strong>社区论坛</strong> - 与同学交流讨论
+                                </a>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <a href="{{ url_for('dashboard') }}" class="text-decoration-none">
+                                    <i class="fas fa-user-circle text-warning me-2"></i><strong>个人中心</strong> - 查看借阅记录与余额
+                                </a>
+                            </div>
+                        </div>
+
+                        {% if not session.user_id %}
+                        <hr class="my-5">
+                        <p class="mb-4">还没有账号？快来加入吧！</p>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 me-3">
+                            <i class="fas fa-user-plus me-2"></i>立即注册
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg px-5">
+                            <i class="fas fa-sign-in-alt me-2"></i>登录
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

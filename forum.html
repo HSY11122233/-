@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}社区论坛 - 智慧图书馆{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary mb-0">
+            <i class="fas fa-comments me-3"></i>社区论坛
+        </h2>
+        <span class="text-muted small">共 {{ posts|length }} 条帖子</span>
+    </div>
+
+    <!-- 发帖区域（加强边框与焦点效果） -->
+    {% if session.user_id %}
+    <div class="card shadow-sm mb-4 border border-2 border-light rounded-4 overflow-hidden">
+        <div class="card-body p-4 bg-white">
+            <form action="{{ url_for('post_new') }}" method="POST">
+                <div class="mb-3">
+                    <textarea 
+                        class="form-control rounded-4 shadow-sm border border-2 border-light" 
+                        name="content" 
+                        rows="5" 
+                        placeholder="有什么想分享的？学习心得、资源推荐、求助提问、闲聊吐槽……都在这里说吧～" 
+                        required 
+                        maxlength="1000"
+                        style="resize: vertical; transition: all 0.3s;"
+                        onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 0.25rem rgba(13,110,253,0.25)'"
+                        onblur="this.style.borderColor='#ced4da'; this.style.boxShadow='none'"></textarea>
+                    <div class="text-end text-muted small mt-2">
+                        最多1000字，还可输入 <span id="charCount">1000</span> 字
+                    </div>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-lg">
+                        <i class="fas fa-paper-plane me-2"></i>发布帖子
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 实时字数统计
+        document.querySelector('textarea').addEventListener('input', function() {
+            const remaining = 1000 - this.value.length;
+            document.getElementById('charCount').textContent = remaining;
+            document.getElementById('charCount').style.color = remaining < 100 ? '#dc3545' : '#6c757d';
+        });
+    </script>
+    {% else %}
+    <div class="alert alert-info rounded-4 text-center py-4 mb-4 border border-primary">
+        <i class="fas fa-info-circle fa-2x mb-3"></i><br>
+        <strong>请先登录</strong> 才能发帖和参与讨论哦～
+        <a href="{{ url_for('login') }}" class="btn btn-outline-primary rounded-pill mt-3 px-4">立即登录</a>
+    </div>
+    {% endif %}
+
+    <!-- 帖子列表 -->
+    {% if posts %}
+        {% for post in posts %}
+        <div class="card shadow-sm mb-4 border-0 rounded-4 overflow-hidden">
+            <!-- 可点击区域：整条帖子（排除删除按钮） -->
+            <a href="{{ url_for('post_detail', post_id=post.post_id) }}" 
+               class="text-decoration-none text-dark">
+                <div class="card-body p-4 bg-white clickable-post">
+                    <div class="d-flex align-items-start">
+                        <!-- 头像占位 -->
+                        <div class="flex-shrink-0 me-4">
+                            <div class="bg-gradient-placeholder text-white rounded-circle d-flex align-items-center justify-content-center"
+                                 style="width: 56px; height: 56px; font-size: 1.8rem; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                {{ post.name[0] if post.name else 'U' }}
+                            </div>
+                        </div>
+
+                        <!-- 帖子内容 -->
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong class="text-dark">{{ post.name }}</strong>
+                                    <span class="text-muted small ms-2">@{{ post.username }}</span>
+                                    <span class="text-muted small ms-3">· {{ post.created_at.strftime('%m-%d %H:%M') }}</span>
+                                </div>
+                                <!-- 删除按钮（点击不会跳转） -->
+                                {% if session.user_id == post.post_reader_id or session.role == 'admin' %}
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm stop-propagation"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#deletePostModal{{ post.post_id }}">
+                                    <i class="fas fa-trash-alt me-1"></i>删除
+                                </button>
+                                {% endif %}
+                            </div>
+
+                            <div class="mt-3 text-dark" style="white-space: pre-wrap; word-break: break-word;">
+                                {{ post.content }}
+                            </div>
+
+                            <div class="mt-4 text-primary small">
+                                <i class="fas fa-comment me-1"></i>
+                                {{ post.comment_count }} 条评论
+                                <span class="text-muted ms-3">
+                                    <i class="fas fa-eye me-1"></i>阅读 {{ post.post_id * 10 + 50 }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 删除确认模态框（保持不变） -->
+        {% if session.user_id == post.post_reader_id or session.role == 'admin' %}
+        <div class="modal fade" id="deletePostModal{{ post.post_id }}" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content rounded-4">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle me-2"></i>确认删除</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <p>确定要删除这篇帖子吗？<br><small class="text-muted">删除后不可恢复</small></p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center pb-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">取消</button>
+                        <form action="{{ url_for('delete_post', post_id=post.post_id) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-danger rounded-pill px-4 shadow">
+                                <i class="fas fa-trash me-2"></i>确认删除
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-comment-slash fa-4x mb-4 opacity-50"></i>
+        <h4>论坛还很安静～</h4>
+        <p>成为第一个发言的人吧！</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 点击整条帖子时阻止删除按钮触发跳转 -->
+<style>
+    .clickable-post {
+        transition: background-color 0.2s;
+        cursor: pointer;
+        border-radius: 1rem;
+    }
+    .clickable-post:hover {
+        background-color: #f8f9fa !important;
+    }
+    .stop-propagation {
+        position: relative;
+        z-index: 10;
+    }
+</style>
+
+<script>
+    // 阻止删除按钮冒泡
+    document.querySelectorAll('.stop-propagation').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+        });
+    });
+</script>
+{% endblock %}

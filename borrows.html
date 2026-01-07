@@ -1,0 +1,106 @@
+<!-- templates/borrows.html -->
+{% extends "base.html" %}
+{% block title %}借阅记录{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">📋 借阅记录（共 {{ borrows|length }} 条）</h2>
+
+<!-- Flash 消息显示 -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- 登录状态提示 -->
+{% if session.user_id %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>个人借阅记录：</strong> 正在查看 <strong>{{ session.name or session.username }}</strong> 的借阅情况
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% else %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <strong>提示：</strong> 当前显示的是<strong>全部读者</strong>的借阅记录。<br>
+        登录后将只显示您的个人借阅记录，更清晰安全。
+        <a href="{{ url_for('login') }}" class="alert-link">立即登录</a>
+        {% if not session.username %}　或　<a href="{{ url_for('register') }}" class="alert-link">注册账号</a>{% endif %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% endif %}
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>读者</th>
+                <th>书名</th>
+                <th>借阅日期</th>
+                <th>应还日期</th>
+                <th>归还日期</th>
+                <th class="text-center">状态</th>
+                {% if session.user_id %}
+                <th class="text-center">操作</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if borrows|length == 0 %}
+            <tr>
+                <td colspan="{% if session.user_id %}7{% else %}6{% endif %}" class="text-center py-5 text-muted">
+                    {% if session.user_id %}
+                        您当前没有借阅记录，快去 <a href="{{ url_for('books') }}">借书</a> 吧！
+                    {% else %}
+                        暂无借阅记录
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+                {% for row in borrows %}
+                <tr>
+                    <td>{{ row.reader_name }}</td>
+                    <td><strong>{{ row.book_title }}</strong></td>
+                    <td>{{ row.borrow_date }}</td>
+                    <td>{{ row.due_date }}</td>
+                    <td>{{ row.return_date or '—' }}</td>
+                    <td class="text-center">
+                        {% if row.status == '已归还' %}
+                            <span class="badge bg-success">已归还</span>
+                        {% elif row.status == '逾期' %}
+                            <span class="badge bg-danger">逾期</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">借阅中</span>
+                        {% endif %}
+                    </td>
+                    {% if session.user_id %}
+                    <td class="text-center">
+                        {% if row.return_date is none and row.status != '已归还' %}
+                            <a href="{{ url_for('return_book', record_id=row.record_id) }}"
+                               class="btn btn-sm btn-outline-success"
+                               onclick="return confirm('确认归还《{{ row.book_title }}》吗？\n{% if row.status == '逾期' %}注意：已逾期，将产生罚款！{% endif %}')">
+                                归还
+                            </a>
+                        {% else %}
+                            <small class="text-muted">已归还</small>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('books') }}" class="btn btn-primary">返回书籍列表</a>
+    <a href="{{ url_for('overdue') }}" class="btn btn-danger me-2">查看逾期记录</a>
+    {% if session.user_id %}
+        <a href="{{ url_for('books') }}" class="btn btn-success">去借书 →</a>
+    {% endif %}
+</div>
+{% endblock %}
